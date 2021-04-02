@@ -1,0 +1,62 @@
+<!-- ZAP - API reference  https://www.zaproxy.org/docs/api/#alertviewalerts -->
+
+<!-- Spider -->
+    <!-- Start a new Spider -->
+    GET /JSON/spider/action/scan/?url=<https://application_to_scan>
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+    <!-- View all scans -->
+    GET /JSON/spider/view/scans/
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+    <!-- Get specific result of spider scan -->
+    GET /JSON/spider/view/results/?scnId=1
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+<!-- Stats -->
+
+    GET /JSON/stats/view/siteStats/?site=<https://application_to_scan>
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+<!-- Passive Scans -->
+<!-- A spider automatically triggers a passive scan. None of these calls are needed -->
+    <!-- Get Scanners -->
+    GET /JSON/pscan/view/scanners/
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+    <!-- Records to scan: Number of pages remaining -->
+    GET /JSON/pscan/view/recordsToScan/
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+    <!-- Enable scanners -->
+    GET /JSON/pscan/action/enableScanners/
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+
+<!--  Alert/Results view -->
+
+    <!-- Alert Summary -->
+    GET /JSON/alert/view/alertsSummary/?baseurl=<https://application_to_scan>
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>
+
+    <!-- View Alerts -->
+    GET /JSON/alert/view/alerts/
+    Host: <zap_domain_name>
+    Accept: application/json
+    X-ZAP-API-Key: <zap_api_key>

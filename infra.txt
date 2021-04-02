@@ -1,0 +1,23 @@
+Developer Workstation extensions:
+    Security Code Scan - NuGet reference
+
+VSTS extensions:
+    SonarCube - SAST (tested)
+    WhiteSourceBolt - Config scaN (tested)
+    OWASP Zed Attack Proxy Scan - DAST (tested)
+    Micro Focus Fortify - SAST (untested)
+    Secure DevOps Kit (AzSK) CICD Extensions for Azure - Platform Security (untested)
+
+Azure Subscription (Platform Security):
+    AzSK Continuous Assurance from PowerShell.
+    AzSk is available as a PS module in PS Gallery
+
+SAST and DAST:
+    Sonar and ZAP needs to have servers running.
+    These are coded as a docker-compose service. (devloper orchestration)
+    Configure Sonar and ZAP service connections (will be asked for when creating the build pipeline)
+
+Code:
+    Just a simple ASP.NET full framework AppId
+    Buggy code is in "HomeControllerCode.cs" file
+    Paste the code in the About() controller action of the HomeController.cs file.

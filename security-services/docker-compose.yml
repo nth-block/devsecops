@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+    reverseproxy:
+        image: reverseproxy
+        ports:
+            - 80:80
+        restart: always
+
+    zap:
+        depends_on:
+            - reverseproxy
+        image: owasp/zap2docker-bare:latest
+        ports:
+            - 8090:8090
+        command: ["zap.sh", "-daemon", "-port", "8090", "-host", "0.0.0.0", "-config", "api.key=<OWASP ZAP API Key Here>", "-config", "api.addrs.addr.name=.*", "-config", "api.addrs.addr.regex=true"]
+        restart: always
+
+    sonar:
+        depends_on:
+            - reverseproxy
+        image: sonarqube:latest
+        ports:
+            - 9000:9000
+        restart: always

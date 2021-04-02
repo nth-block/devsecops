@@ -1,0 +1,123 @@
+variables:
+- name: BuildParameters.solution
+  value: '**\*.sln'
+- name: BuildParameters.ArtifactName
+  value: drop
+trigger:
+  branches:
+    include:
+    - refs/heads/master
+  batch: True
+name: $(date:yyyyMMdd)$(rev:.r)
+jobs:
+- job: Phase_1
+  displayName: Build and Static Scan
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted VS2017
+  steps:
+  - checkout: self
+  - task: dependency-check-build-task@5
+    displayName: Dependency Check
+    inputs:
+      projectName: aspnetwebapp
+      scanPath: aspnetwebapp/**
+  - task: NuGetToolInstaller@0
+    displayName: Use NuGet 4.4.1
+    inputs:
+      versionSpec: 4.4.1
+  - task: NuGetCommand@2
+    displayName: NuGet restore
+    inputs:
+      solution: $(BuildParameters.solution)
+  - task: SonarQubePrepare@4
+    displayName: Prepare analysis on SonarQube
+    inputs:
+      SonarQube: a4763166-24fc-4eed-b030-c8db9791820e
+      projectKey: aspnetwebapp
+      projectName: devsecops-nth
+  - task: VSBuild@1
+    displayName: Build solution
+    inputs:
+      solution: $(BuildParameters.solution)
+      msbuildArgs: /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+  - task: SonarQubeAnalyze@4
+    displayName: Run Code Analysis
+  - task: SonarQubePublish@4
+    displayName: Publish Quality Gate Result
+  - task: VSTest@2
+    displayName: Test Assemblies
+    inputs:
+      testAssemblyVer2: >-
+        **\$(BuildConfiguration)\*test*.dll
+
+        !**\obj\**
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+      diagnosticsEnabled: True
+  - task: PublishSymbols@2
+    displayName: Publish symbols path
+    continueOnError: True
+    inputs:
+      SearchPattern: '**\bin\**\*.pdb'
+      PublishSymbols: false
+      SymbolServerType: TeamServices
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Artifact
+    inputs:
+      PathtoPublish: $(build.artifactstagingdirectory)
+      ArtifactName: $(BuildParameters.ArtifactName)
+      TargetPath: '\\my\share\$(Build.DefinitionName)\$(Build.BuildNumber)'
+  - task: AzureRmWebAppDeployment@3
+    displayName: 'Azure App Service Deploy: devsecops-nth'
+    inputs:
+      ConnectedServiceName: 46c65ace-4409-49a9-8876-0ab12cb8c5b8
+      WebAppName: devsecops-nth
+      Package: $(build.artifactstagingdirectory)/**/*.zip
+- job: Phase_2
+  displayName: Delay for Web App Deployment to prime up
+  cancelTimeoutInMinutes: 1
+  dependsOn: Phase_1
+  pool: server
+  steps:
+  - task: Delay@1
+    displayName: Delay by 1 minute
+    enabled: False
+    inputs:
+      delayForMinutes: 1
+- job: Phase_3
+  displayName: Dynamic Scanning Tasks
+  cancelTimeoutInMinutes: 1
+  dependsOn:
+  - Phase_1
+  - Phase_2
+  pool:
+    name: Hosted VS2017
+  steps:
+  - checkout: self
+  - task: OwaspZapScan@2
+    displayName: OWASP ZAP Scan
+    inputs:
+      ZapApiUrl: <ZAP Service Domain Name>
+      ZapApiKey: <OWASP ZAP API Key Here>
+      TargetUrl: <WebApplication URL Here>
+      ExecuteSpiderScan: true
+      RecurseSpider: true
+      SubtreeOnly: false
+      ExecuteActiveScan: false
+      InScopeOnly: false
+      EnableVerifications: false
+  - task: AzureFileCopy@1
+    displayName: AzureBlob File Copy
+    condition: succeededOrFailed()
+    inputs:
+      SourcePath: $(System.DefaultWorkingDirectory)/OWASP-ZAP-Report-$(Build.BuildId).html
+      ConnectedServiceNameARM: cfa2e891-861d-44e0-acf4-95bbfe3b6770
+      Destination: AzureBlob
+      StorageAccountRM: devsecops
+      ContainerName: <reports_container>
+      outputStorageUri: https://<storage_account_name>.file.core.windows.net/<reports_container>
+      outputStorageContainerSasToken: <SAS TOKEN for Accesing Azure Blob Stroage>
+...

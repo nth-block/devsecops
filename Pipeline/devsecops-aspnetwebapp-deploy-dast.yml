@@ -1,0 +1,44 @@
+# Cron Schedules have been converted using UTC Time Zone and may need to be updated for your location
+trigger:
+  branches:
+    include:
+    - refs/heads/master
+  batch: True
+schedules:
+- cron: 0 2 * * 0
+  branches:
+    include:
+    - refs/heads/master
+name: $(date:yyyyMMdd)$(rev:.r)
+jobs:
+- job: Phase_1
+  displayName: Dynamic Scanning Tasks
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Default
+  steps:
+  - checkout: self
+  - task: OwaspZapScan@2
+    displayName: OWASP ZAP Scan
+    inputs:
+      ZapApiUrl: <ZAP Service Domain Name>
+      ZapApiKey: <OWASP ZAP API Key Here>
+      TargetUrl: <WebApplication URL Here>
+      ExecuteSpiderScan: true
+      RecurseSpider: true
+      SubtreeOnly: false
+      ExecuteActiveScan: false
+      InScopeOnly: false
+      EnableVerifications: false
+  - task: AzureFileCopy@1
+    displayName: AzureBlob File Copy
+    condition: succeededOrFailed()
+    inputs:
+      SourcePath: $(System.DefaultWorkingDirectory)/OWASP-ZAP-Report-$(Build.BuildId).html
+      ConnectedServiceNameARM: cfa2e891-861d-44e0-acf4-95bbfe3b6770
+      Destination: AzureBlob
+      StorageAccountRM: devsecops
+      ContainerName: <reports_container>
+      outputStorageUri: https://<storage_account_name>.file.core.windows.net/<reports_container>
+      outputStorageContainerSasToken: <SAS TOKEN for Accesing Azure Blob Stroage>
+...
