@@ -16,8 +16,3 @@ SAST and DAST:
     Sonar and ZAP needs to have servers running.
     These are coded as a docker-compose service. (devloper orchestration)
     Configure Sonar and ZAP service connections (will be asked for when creating the build pipeline)
-
-Code:
-    Just a simple ASP.NET full framework AppId
-    Buggy code is in "HomeControllerCode.cs" file
-    Paste the code in the About() controller action of the HomeController.cs file.
